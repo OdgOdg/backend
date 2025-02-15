@@ -1,0 +1,40 @@
+services:
+  postgresql:
+    container_name: postgresql
+    image: postgres:12.0-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${P_USER}
+      POSTGRES_PASSWORD: ${P_PASSWORD}
+      POSTGRES_DB: ${P_DB}
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - /var/lib/postgresql/data
+      # - ./postgres/postgres-data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - npage
+
+  springboot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    depends_on:
+      - postgresql
+    ports:
+      - 8080:8080
+    container_name: springboot
+    environment:
+      SPRING_DATASOURCE_URL: ${DATABASE_URL}
+      SPRING_DATASOURCE_USERNAME: ${DATABASE_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD}
+
+      SPRING_PROFILES_ACTIVE: dev
+    networks:
+      - npage
+
+networks:
+  npage:
+    driver: bridge
